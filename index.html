@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>HelpTeacher | Painel</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="js/scripts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</head>
+<body onload="getDataHome()">
+    <noscript><div style="background-color: rgba(50,200,50,.3); padding: 10px;">O seu Javascript está desabilitado! <br> O site não terá algumas funcionalidades. <br> Por gentileza habilite-o para ter a experiência real do site.</div></noscript>
+    <div class="navbar-fixed">
+        <nav>
+            <div class="nav-wrapper ht_max_width red darken-4">
+                <a href="/" class="brand-logo">HelpTeacher</a>
+                <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+                <ul class="right hide-on-med-and-down">
+                    <li><a href="/disciplines">Disciplinas</a></li>
+                    <li><a href="/acting-areas">Áreas de atuação</a></li>
+                    <li><a href="/graduations">Formações</a></li>
+                    <li><a href="/about">Sobre</a></li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+    <ul class="sidenav" id="mobile-demo">
+        <li><a href="/disciplines">Disciplinas</a></li>
+        <li><a href="/acting-areas">Áreas de atuação</a></li>
+        <li><a href="/graduations">Formações</a></li>
+        <li><a href="/about">Sobre</a></li>
+    </ul>
+    <div class="ht_container">
+        <h5 class="flow-text ht_center_text"><i class="medium material-icons">dashboard</i>Painel</h5>
+        <div style="display:flex; justify-content: flex-end;">
+            <a href="#teachers" style="margin-right: 10px;">Ir para professores</a> <a href="#students">Ir para alunos</a>
+        </div>
+        <hr class="ht_margin_separator">
+        <div>
+            <h6>Professores</h6>
+            <blockquote>
+                Ultimos 50 professores cadastrados
+            </blockquote>
+            <table id="teachers" class="centered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>E-mail</th>
+                    <th>Nome</th>
+                    <th>Data de nascimento</th>
+                    <th>Especialidade</th>
+                    <th>Estado</th>
+                    <th>Bairro</th>
+                    <th>Valor por hora</th>
+                    <th>Removido</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+            </table>
+        </div>
+        <hr class="ht_margin_separator">
+        <div>
+            <h6>Alunos</h6>
+            <blockquote>
+                Ultimos 50 alunos cadastrados
+            </blockquote>
+            <table id="students" class="centered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>CPF</th>
+                    <th>Genero</th>
+                    <th>Data de nascimento</th>
+                    <th>Bairro</th>
+                    <th>Removido</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+            </table>
+        </div>
+        <hr class="ht_margin_separator">
+    </div>
+</body>
+</html>

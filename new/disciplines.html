@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>HelpTeacher | Disciplinas</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="../js/scripts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <style>
+        #loading{
+            display: none;
+        }
+    </style>
+</head>
+<body onload="getData()">
+    <noscript><div style="background-color: rgba(50,200,50,.3); padding: 10px;">O seu Javascript está desabilitado! <br> O site não terá algumas funcionalidades. <br> Por gentileza habilite-o para ter a experiência real do site.</div></noscript>
+    <div class="navbar-fixed">
+        <nav>
+            <div class="nav-wrapper red darken-4">
+                <a href="/" class="brand-logo">HelpTeacher</a>
+                <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+                <ul class="right hide-on-med-and-down">
+                    <li><a href="/disciplines">Disciplinas</a></li>
+                    <li><a href="/acting-areas">Áreas de atuação</a></li>
+                    <li><a href="/graduations">Formações</a></li>
+                    <li><a href="/about">Sobre</a></li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+    <ul class="sidenav" id="mobile-demo">
+        <li><a href="/disciplines">Disciplinas</a></li>
+        <li><a href="/acting-areas">Áreas de atuação</a></li>
+        <li><a href="/graduations">Formações</a></li>
+        <li><a href="/about">Sobre</a></li>
+    </ul>
+    <div>
+        <div class="ht_container">
+            <h5 style="margin-bottom: 30px;">Cadastrar / Editar disciplina</h5>
+            <form>
+                <div class="row">
+                    <label for="id"></label>
+                    <input type="hidden" id="id">
+                </div>
+                <div class="input-field col s12">
+                    <label for="description">Descrição</label>
+                    <input type="text" id="description" maxlength="255">
+                </div>
+                <div class="row">
+                    <label for="teacher">Professor</label>
+                    <select id="teacher" class="browser-default">
+                    </select>
+                </div>
+                <div class="row">
+                    <label for="acting-area">Área de atuação</label>
+                    <select id="acting-area" class="browser-default">
+                    </select>
+                </div>
+            </form>
+            <div class="row">
+                <button onclick="returnOnList()" class="btn blue">Voltar</button>
+                <button onclick="save()" class="btn green" id="save">Salvar</button>
+            </div>
+            <div class="row" id="loading">
+                Cadastrando...
+                <div class="progress">
+                    <div class="indeterminate"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function getTeachersForSelect() {
+            const select = document.querySelector("#teacher")
+            axios('/teachers').then(res => {
+                let options = '<option value=""></option>'
+                for(let i = 1; i <= res.data.teachers.length ;i++){
+                    options += `<option value='${res.data.teachers[i-1].id}'>${res.data.teachers[i-1].name} - ${res.data.teachers[i-1].email}</option> `
+                }
+
+                select.innerHTML = options
+            })
+        }
+
+        function getActingAreaForSelect(){
+            const select = document.querySelector("#acting-area")
+            let options = '<option value=""></option>'
+            axios('/acting-areas/data').then(res => {
+                for(let i = 1; i <= res.data.acting.length ;i++){
+                    options += `<option value='${res.data.acting[i-1].id}'>${res.data.acting[i-1].description}</option>`
+                }
+
+                select.innerHTML = options
+            })
+        }
+
+        async function save(){
+            const loadingBar = document.getElementById('loading')
+            const saveBtn = document.getElementById('save')
+            saveBtn.style.display = 'none'
+            loadingBar.style.display = 'block'
+            
+            const discipline = await getDiscipline()
+            await axios.post('/disciplines/data', discipline)
+            .then(() => {
+                M.toast({html: 'Operação realizada com sucesso! Redirecionando...'})
+                setTimeout(() => {
+                    location.href = "/disciplines"
+                } , 2000)
+            })
+            .catch(error =>{
+                M.toast({html: `Ocorreu um erro. Msg: ${error.response.data}`})
+            })
+            
+            saveBtn.style.display = 'inline-block'
+            loadingBar.style.display = 'none'
+            
+            
+        }
+        
+        function getDiscipline(){
+            const description = document.querySelector('#description').value
+            const teacher = document.querySelector('#teacher').value
+            const actingArea = document.querySelector('#acting-area').value
+            return {
+                description: description,
+                idTeacher: teacher,
+                idActingArea: actingArea
+            }
+        }
+        
+        function returnOnList(){
+            location.href = '/disciplines'
+        }
+        
+        function getData(){
+            getTeachersForSelect()
+            getActingAreaForSelect()
+        }
+        </script>
+</body>
+</html>
