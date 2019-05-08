@@ -11,6 +11,11 @@
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <script src="js/scripts.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        if(!localStorage.getItem('aps')){
+            location.href = '/'
+        }
+    </script>
 </head>
 <body>
     <noscript><div style="background-color: rgba(50,200,50,.3); padding: 10px;">O seu Javascript está desabilitado! <br> O site não terá algumas funcionalidades. <br> Por gentileza habilite-o para ter a experiência real do site.</div></noscript>
@@ -24,6 +29,7 @@
                     <li><a href="/acting-areas">Áreas de atuação</a></li>
                     <li><a href="/graduations">Formações</a></li>
                     <li><a href="/about">Sobre</a></li>
+                    <li><a href="#" onclick="removeLocalStorage()">Sair</a></li>
                 </ul>
             </div>
         </nav>
@@ -33,6 +39,7 @@
         <li><a href="/acting-areas">Áreas de atuação</a></li>
         <li><a href="/graduations">Formações</a></li>
         <li><a href="/about">Sobre</a></li>
+        <li><a href="#" onclick="removeLocalStorage()">Sair</a></li>
     </ul>
     <div class="ht_container_center">
         <div class="ht_center_text ht_mini_container ht_border_container">

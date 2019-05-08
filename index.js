@@ -29,10 +29,13 @@ const file = require('./links')
 
 // View Control
 
+app.get('/login', async (req, res) => {
+    res.sendFile(file.login, {root: __dirname})
+})
+
 app.get('/', async (req, res) => {
     res.sendFile(file.index, {root: __dirname})
 })
-
 
 app.get('/js/scripts.js', (req, res) => {
     res.sendFile(file.js, {root: __dirname})
@@ -54,8 +57,16 @@ app.get('/acting-areas', (req, res) => {
     res.sendFile(file.actingArea, {root: __dirname})
 })
 
+app.get('/acting-areas/new', (req, res) => {
+    res.sendFile(file.formActingAreaNew, {root: __dirname})
+})
+
 app.get('/graduations', (req, res) => {
     res.sendFile(file.graduation, {root: __dirname})
+})
+
+app.get('/graduations/new', (req, res) => {
+    res.sendFile(file.formGraduationsNew, {root: __dirname})
 })
 
 app.get('/about', (req, res) => {
@@ -70,6 +81,23 @@ app.get('/about', (req, res) => {
 
 
 // Data management
+
+
+//LOGIN
+
+app.post('/signIn', (req, res) => {
+    const key = {...req.body}
+    try {
+        if(key.password === 'apsmobile2019'){
+            return res.status(204).send()
+        }else{
+            return res.status(401).send()
+        }
+    } catch (error) {
+        return res.status(500).send(error)
+    }
+})
+
 
 
 //TEACHERS
@@ -147,6 +175,8 @@ app.route('/disciplines/data')
             validateInput(discipline.idTeacher, 'Professor não informado')
             validateInput(discipline.idActingArea, 'Área de atuação não informada')
 
+            discipline.description = discipline.description.toUpperCase()
+
             knex('Discipline').insert(discipline).then()
             
             return res.status(204).send()
@@ -172,7 +202,7 @@ app.route('/disciplines/data')
 
 
 //ACTING AREAS
-app.route('/acting-areas/data')
+app.route('/acting-area/data')
     .get((req, res) => {
         knex.select('*').from('Acting Area')
         .where(builder => builder.whereNull('deleted').orWhere('deleted', false)).orderBy('id','desc').limit(limit).then(resp => {
@@ -182,6 +212,21 @@ app.route('/acting-areas/data')
             res.json({acting: resp})
         }).catch(error => res.status(500).send('Ocorreu um erro ao obter os dados. Erro: '+error))
     })
+    .post((req, res) => {
+        const area = {...req.body}
+        try {
+            
+            validateInput(area.description, 'Descrição não informada')
+
+            area.description = area.description.toUpperCase()
+
+            knex('Acting Area').insert(area).then()
+            
+            return res.status(204).send()
+        } catch (error) {
+            return res.status(400).send(error)
+        }
+    })
     .delete(async (req, res) => {
         const id = req.query.id
         const acting = {
@@ -189,6 +234,60 @@ app.route('/acting-areas/data')
         }
         try{
             await knex('Acting Area').update(acting).where('id',id)
+            return res.status(204).send()
+
+        }catch(error){
+            return resp.status(500).send()
+        }
+    })
+
+
+
+
+
+    //ACTING AREAS
+app.route('/graduations/data')
+    .get((req, res) => {
+        knex.select('Graduation.id', 'Graduation.description as description', 'Graduation.conclusion', 'Graduation.deleted', 'Teacher.name', 'Teacher.email').from('Graduation')
+        .innerJoin('Teacher', 'Graduation.idTeacher', 'Teacher.id')
+        .where(builder => builder.whereNull('Graduation.deleted').orWhere('Graduation.deleted', false)).orderBy('Graduation.id','desc').limit(limit).then(resp => {
+            resp.forEach(graduation => {
+                graduation.conclusion = graduation.conclusion || 'NÃO CONCLUÍDO'
+                graduation.deleted = graduation.deleted ? 'Sim' : 'Não'
+            })
+            res.json({graduation: resp})
+        }).catch(error => res.status(500).send('Ocorreu um erro ao obter os dados. Erro: '+error))
+    })
+    .post((req, res) => {
+        const graduation = {...req.body}
+        try {
+            
+            validateInput(graduation.description, 'Descrição não informada')
+            validateInput(graduation.idTeacher, 'Professor não informado')
+
+            graduation.description = graduation.description.toUpperCase()
+
+            if(graduation.conclusion){
+                const aux = graduation.conclusion.split('/')
+                graduation.conclusion = `${aux[2]+'-'+aux[1]+'-'+aux[0]}`
+            }else{
+                delete graduation.conclusion
+            }
+            
+            knex('Graduation').insert(graduation).then()
+            
+            return res.status(204).send()
+        } catch (error) {
+            return res.status(400).send(error)
+        }
+    })
+    .delete(async (req, res) => {
+        const id = req.query.id
+        const graduation = {
+            deleted: true
+        }
+        try{
+            await knex('Graduation').update(graduation).where('id',id)
             return res.status(204).send()
 
         }catch(error){

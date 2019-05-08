@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>HelpTeacher | Disciplinas</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script src="js/scripts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</head>
+<body>
+    <noscript><div style="background-color: rgba(50,200,50,.3); padding: 10px;">O seu Javascript está desabilitado! <br> O site não terá algumas funcionalidades. <br> Por gentileza habilite-o para ter a experiência real do site.</div></noscript>
+    <div class="ht_container_center">
+        <div class="ht_center_text ht_mini_container">
+            <div>
+                <h5 class="ht_center_text"><i class="material-icons">android</i>Painel</h5>
+            </div>
+            <div>
+                <h6 class="ht_center_text">Painel de acesso ao banco de dados Help Teacher</h6>
+                <hr>
+                <div class="input-field col s12">
+                    <input id="password" type="password" class="validate">
+                    <label for="password">Chave de acesso</label>
+                </div>
+                <small style="display: flex; align-items: center;"><i class="material-icons" style="margin-right: 2px;">code</i> Developed by Allan Wanderley Alves  </small>
+            </div>
+        </div>
+        <button onclick="requestAccess()" class="btn green ht_center_text" style="margin-top: 15px;"><i class="material-icons">lock</i>Solicitar acesso</button>
+    </div>
+
+</body>
+</html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>HelpTeacher | Disciplinas</title>
+    <title>HelpTeacher | Área de atuação</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <link rel="stylesheet" type="text/css" href="../css/style.css">
@@ -17,7 +17,7 @@
         }
     </style>
 </head>
-<body onload="getData()">
+<body onload="verifyLocalStorage()">
     <noscript><div style="background-color: rgba(50,200,50,.3); padding: 10px;">O seu Javascript está desabilitado! <br> O site não terá algumas funcionalidades. <br> Por gentileza habilite-o para ter a experiência real do site.</div></noscript>
     <div class="navbar-fixed">
         <nav>
@@ -43,25 +43,15 @@
     </ul>
     <div>
         <div class="ht_container">
-            <h5 style="margin-bottom: 30px;">Cadastrar disciplina</h5>
+            <h5 style="margin-bottom: 30px;">Cadastrar Área de atuação</h5>
             <form>
                 <div class="row">
                     <label for="id"></label>
                     <input type="hidden" id="id">
                 </div>
                 <div class="input-field col s12">
-                    <label for="description">Descrição</label>
-                    <input type="text" id="description" maxlength="255">
-                </div>
-                <div class="row">
-                    <label for="teacher">Professor</label>
-                    <select id="teacher" class="browser-default">
-                    </select>
-                </div>
-                <div class="row">
-                    <label for="acting-area">Área de atuação</label>
-                    <select id="acting-area" class="browser-default">
-                    </select>
+                    <label for="description-acting-area">Descrição</label>
+                    <input type="text" id="description-acting-area" maxlength="255">
                 </div>
             </form>
             <div class="row">
@@ -77,42 +67,18 @@
         </div>
     </div>
     <script>
-        function getTeachersForSelect() {
-            const select = document.querySelector("#teacher")
-            axios('/teachers').then(res => {
-                let options = '<option value=""></option>'
-                for(let i = 1; i <= res.data.teachers.length ;i++){
-                    options += `<option value='${res.data.teachers[i-1].id}'>${res.data.teachers[i-1].name} - ${res.data.teachers[i-1].email}</option> `
-                }
-
-                select.innerHTML = options
-            })
-        }
-
-        function getActingAreaForSelect(){
-            const select = document.querySelector("#acting-area")
-            let options = '<option value=""></option>'
-            axios('/acting-area/data').then(res => {
-                for(let i = 1; i <= res.data.acting.length ;i++){
-                    options += `<option value='${res.data.acting[i-1].id}'>${res.data.acting[i-1].description}</option>`
-                }
-
-                select.innerHTML = options
-            })
-        }
-
         async function save(){
             const loadingBar = document.getElementById('loading')
             const saveBtn = document.getElementById('save')
             saveBtn.style.display = 'none'
             loadingBar.style.display = 'block'
             
-            const discipline = await getDiscipline()
-            await axios.post('/disciplines/data', discipline)
+            const actingArea = await getActingArea()
+            await axios.post('/acting-area/data', actingArea)
             .then(() => {
                 M.toast({html: 'Operação realizada com sucesso! Redirecionando...'})
                 setTimeout(() => {
-                    location.href = "/disciplines"
+                    returnOnList()
                 } , 2000)
             })
             .catch(error =>{
@@ -125,28 +91,15 @@
             
         }
         
-        function getDiscipline(){
-            const description = document.querySelector('#description').value
-            const teacher = document.querySelector('#teacher').value
-            const actingArea = document.querySelector('#acting-area').value
+        function getActingArea(){
+            const description = document.querySelector('#description-acting-area').value
             return {
                 description: description,
-                idTeacher: teacher,
-                idActingArea: actingArea
             }
         }
         
         function returnOnList(){
-            location.href = '/disciplines'
-        }
-        
-        function getData(){
-            getTeachersForSelect()
-            getActingAreaForSelect()
-        }
-
-        if(!localStorage.getItem('aps')){
-            location.href = "/"
+            location.href = '/acting-areas'
         }
         </script>
 </body>
