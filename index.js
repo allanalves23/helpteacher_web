@@ -9,6 +9,7 @@ app.use(bodyParser.json({limit: '5mb'}))
 //Database control
 
 const {dbLocal, dbProduction} = require('./database')
+const systemConfig = require('./.env')
 const knex_config = {
 
     client: 'mysql',
@@ -88,7 +89,7 @@ app.get('/about', (req, res) => {
 app.post('/signIn', (req, res) => {
     const key = {...req.body}
     try {
-        if(key.password === 'apsmobile2019'){
+        if(key.password === systemConfig.key){
             return res.status(204).send()
         }else{
             return res.status(401).send()
@@ -301,5 +302,147 @@ app.route('/graduations/data')
         if(Array.isArray(data) && data.length === 0 ) throw msg
         if(typeof data === 'string' && !data.trim()) throw msg
     }
+
+
+
+
+
+//MOBILE ROUTES
+
+//TEACHERS
+app.route('/mobile/teachers')
+    .get(async (req, res) => {
+        let limit = 10
+        const page = req.query.page || 1
+
+        try {
+            const orderPreference = req.query.prefer || null
+            const orderSequence = req.query.sequence || null
+            const orderBy = await setOrderPrefer(orderPreference, orderSequence) 
+            
+            knex.select('Teacher.id as idTeacher','Teacher.name','Teacher.state','Teacher.neighborhood','Teacher.costHour','Discipline.description','Acting Area.description').from('Discipline')
+            .innerJoin('Teacher','Teacher.id','Discipline.idTeacher')
+            .innerJoin('Acting Area','Acting Area.id','Discipline.idActingArea')
+            .whereNotNull('costHour')
+            .where(builder => builder.whereNull('Teacher.deleted').orWhere('Teacher.deleted',false))
+            .limit(limit * page)
+            .orderBy(orderBy.param, orderBy.sequence).then(resp => {
+                res.json({teachers: resp, page: page, count: limit*page})
+            })
+        } catch (error) {
+            return res.status(500).send('Ocorreu um erro ao obter os dados. Erro: '+error)
+        }
+    })
+
+
+
+app.route('/mobile/teachers/:id')
+    .get(async (req, res) => {
+        let limit = 10
+        const id = req.params.id || null
+
+        try {
+            if(!id) throw 'Credencial não fornecida. Erro: ID not found (1)'
+            const teacher = await getTeacher(id)
+            const disciplines = await getDisciplinesPerTeacher(id)
+            const graduations = await getGraduations(id)
+
+            res.json({teacher, disciplines, graduations})
+        } catch (error) {
+            return res.status(500).send('Ocorreu um erro ao obter os dados. Erro: '+error)
+        }
+    })
+    
+
+    const setOrderPrefer = (preference, order) => {
+        let option = 'Teacher.costHour'
+        switch(preference){
+            case 1:{
+                option = 'Teacher.costHour'
+                break
+            }
+            case 2:{
+                option = 'Discipline.description'
+                break
+            }
+            case 3:{
+                option = 'Teacher.name'
+                break
+            }
+            default:{
+                option = 'Teacher.costHour'
+            }
+
+            const data = {
+                param: option,
+                sequence: order ? 'desc' : 'asc' 
+            }
+
+            return data
+        }
+    }
+
+    const getTeacher = async id => {
+
+        try {
+            const teacher = await knex.select('Teacher.id','Teacher.name','Teacher.email','Teacher.state','Teacher.neighborhood', 'Teacher.especiality', 'Teacher.costHour','Teacher.birthDate','Teacher.telphone').from('Teacher')
+            .whereNotNull('costHour')
+            .where(builder => builder.whereNull('Teacher.deleted').orWhere('Teacher.deleted',false))
+            .andWhere('Teacher.id','=',id)
+            .first()
+            return teacher
+
+        } catch (error) {
+            return null
+        }
+        
+    }
+    
+    const getDisciplinesPerTeacher = async id => {
+        
+        try {
+            const disciplines = await knex.select('Discipline.id as idDiscipline','Discipline.description as discipline','Acting Area.description as acting_area').from('Discipline')
+            .innerJoin('Acting Area','Discipline.idActingArea','Acting Area.id')
+            .where(builder => builder.whereNull('Discipline.deleted').orWhere('Discipline.deleted',false))
+            .andWhere(builder => builder.whereNull('Acting Area.deleted').orWhere('Acting Area.deleted',false))
+            .andWhere('Discipline.idTeacher',id)
+            
+            return disciplines
+        } catch (error) {
+            return null
+        }
+
+
+    }
+
+    const getGraduations = async id => {
+
+        try {
+            const graduations = await knex.select('id','description','conclusion')
+            .from('Graduation')
+            .where('idTeacher',id)
+            .andWhere(builder => builder.whereNull('deleted').orWhere('deleted',false))
+            
+            return graduations
+            
+        } catch (error) {
+            return null
+        }
+    }
+
+app.route('/mobile/students/:id')
+    .get(async (req, res) => {
+        const id = req.params.id || null
+        try {
+            if(!id) throw 'Credencial não fornecida. Erro: ID not found (1)'
+            knex.select('*').from('Student').where({id}).first()
+            .then(resp => {
+                res.json({student: resp})
+            })
+        } catch (error) {
+            return res.status(500).send('Ocorreu um erro ao obter os dados. Erro: '+error)
+        }
+    })
+    
 
 app.listen(port, () => console.log(`Servidor executando na porta ${port}`))

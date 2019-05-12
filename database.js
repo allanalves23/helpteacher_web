@@ -8,11 +8,11 @@ module.exports = {
         dateStrings: 'date'
     },
     dbProduction: {
-        host : '',
-        port: '',
-        database: '',
-        user: '',
-        password: '',
+        host : 'mysql11-farm76.kinghost.net',
+        port: '3306',
+        database: 'controledeterm',
+        user: 'controlede_add1',
+        password: '287809kh',
         dateStrings: 'date'
     }
 }
