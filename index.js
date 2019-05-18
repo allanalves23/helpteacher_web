@@ -314,6 +314,7 @@ app.route('/mobile/teachers')
     .get(async (req, res) => {
         let limit = 10
         const page = req.query.page || 1
+        const query = req.query.query || ''
 
         try {
             const orderPreference = req.query.prefer || null
@@ -325,6 +326,10 @@ app.route('/mobile/teachers')
             .innerJoin('Acting Area','Acting Area.id','Discipline.idActingArea')
             .whereNotNull('costHour')
             .where(builder => builder.whereNull('Teacher.deleted').orWhere('Teacher.deleted',false))
+            .andWhere(builder => {
+                builder.where('Teacher.name','like',`%${query}%`)
+                .orWhere('Teacher.especiality','like',`%${query}%`)
+            })
             .limit(limit * page)
             .orderBy(orderBy.param, orderBy.sequence).then(resp => {
                 res.json({teachers: resp, page: page, count: limit*page})
@@ -333,7 +338,32 @@ app.route('/mobile/teachers')
             return res.status(500).send('Ocorreu um erro ao obter os dados. Erro: '+error)
         }
     })
+    .post(async (req, res) => {
+        const teacher = {...req.body}
 
+        try {
+            
+            validateInput(teacher.name, 'Nome inválido')
+            validateInput(teacher.emailLogin, 'E-mail inválido')
+            validateInput(teacher.birthDate, 'Data de nascimento inválida')
+            validateInput(teacher.telphone, 'Telefone inválido')
+            validateInput(teacher.password, 'Senha inválida')
+            
+            const teacherExists = await knex.select('*').from('Teacher').where('emailLogin','=',teacher.emailLogin).orWhere('telphone','=',teacher.telphone).first()
+
+            if(teacherExists && teacherExists.id) throw 'Ja existe um professor com estas informações'
+            if(teacher.password !== teacher.confirmPassword) throw 'As senhas não conferem'
+            
+            delete teacher.confirmPassword
+
+            knex('Teacher').insert(teacher).then(() => res.status(204).send())
+        } catch (error) {
+            return res.status(500).send('Ocorreu um erro ao obter os dados. Erro: '+error)
+        }
+    })
+    .put((req, res) => {
+        const teacher = {...req.body}
+    })
 
 
 app.route('/mobile/teachers/:id')

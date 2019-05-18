@@ -13,6 +13,7 @@ parametros:
 - prefer = (OPCIONAL) Usado para indicar a preferência de qual tipo de ordenação deseja. Por preço, nome de professor (ordem alfabetica) ou disciplina. Valores possíveis são 1 (Por preço), 2 (Por disciplina) ou 3 (Por nome de professor). Ao omitir será adotado o tipo por preço.
 - sequence = Usado para indicar a disposição da listagem dos professores, seja por valor menos/maior ou ordem alfabética. Valores possíveis: "" (string vazia) = valor nulo, isto é, adota o comportamento padrão sendo ordenação por ascendencia; 1 (ou qualquer outro caractere diferente de 0) = adota a disposição por descendencia.
 tipo de retorno: Array de objetos 
+- query = Usado para indicar o campo de busca digitado pelo usuário.
 
 ### Dados de professor
 
