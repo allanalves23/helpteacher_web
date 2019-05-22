@@ -11,8 +11,8 @@ module.exports = {
         host : 'mysql11-farm76.kinghost.net',
         port: '3306',
         database: 'controledeterm',
-        user: 'controlede_add1',
-        password: '287809kh',
+        user: 'controlede_add2',
+        password: '04142392Awa',
         dateStrings: 'date'
     }
 }

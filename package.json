@@ -1,7 +1,7 @@
 {
   "name": "help_teacher_backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Mini aplicação para gerenciar dados que o aplicativo Help teacher não realiza",
   "main": "index.js",
   "scripts": {
     "start": "nodemon",

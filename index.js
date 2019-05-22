@@ -1,6 +1,6 @@
 const app = require('express')()
 const bodyParser = require('body-parser')
-const port = 3000
+const port = 21201
 
 
 
@@ -13,7 +13,7 @@ const systemConfig = require('./.env')
 const knex_config = {
 
     client: 'mysql',
-    connection: dbLocal,
+    connection: dbProduction,
     pool: {
         min: 2,
         max: 10,
@@ -96,6 +96,29 @@ app.post('/signIn', (req, res) => {
         }
     } catch (error) {
         return res.status(500).send(error)
+    }
+})
+
+
+app.post('/mobile/signIn', async (req, res) => {
+    const request = {...req.body}
+    const typeUser = request.type
+
+    try {
+        if(typeUser === 'student'){
+            const student = await knex.select('id','email','name','cpf').from('Student').where({email: request.email}).first()
+            if(!student) throw 'Cadastro não encontrado'
+            
+            return res.json({student})
+        }else{
+            const teacher = await knex.select('id','emailLogin','email','name','password').from('Teacher').where({emailLogin: request.email}).first()
+            if(!teacher) throw 'Cadastro não encontrado'
+            if(teacher.password != request.password) throw 'Senha incorreta'
+            delete teacher.password
+            return res.json({teacher})
+        }
+    } catch (error) {
+        return res.status(401).send(error)        
     }
 })
 
@@ -310,9 +333,10 @@ app.route('/graduations/data')
 //MOBILE ROUTES
 
 //TEACHERS
+
 app.route('/mobile/teachers')
     .get(async (req, res) => {
-        let limit = 10
+        let limit = 5
         const page = req.query.page || 1
         const query = req.query.query || ''
 
@@ -320,8 +344,7 @@ app.route('/mobile/teachers')
             const orderPreference = req.query.prefer || null
             const orderSequence = req.query.sequence || null
             const orderBy = await setOrderPrefer(orderPreference, orderSequence) 
-            
-            knex.select('Teacher.id as idTeacher','Teacher.name','Teacher.state','Teacher.neighborhood','Teacher.costHour','Discipline.description','Acting Area.description').from('Discipline')
+            knex.select('Teacher.id as idTeacher','Teacher.name','Teacher.state','Teacher.neighborhood','Teacher.costHour','Discipline.description as disciplineDesc','Acting Area.description as actingAreaDesc').from('Discipline')
             .innerJoin('Teacher','Teacher.id','Discipline.idTeacher')
             .innerJoin('Acting Area','Acting Area.id','Discipline.idActingArea')
             .whereNotNull('costHour')
@@ -361,10 +384,66 @@ app.route('/mobile/teachers')
             return res.status(500).send('Ocorreu um erro ao obter os dados. Erro: '+error)
         }
     })
-    .put((req, res) => {
-        const teacher = {...req.body}
-    })
 
+
+
+app.route('/mobile/user')
+        .post(async (req, res) => {
+            let user = {...req.body}
+            let table = ''
+            let email = ''
+
+            try {
+                validateInput(user.name, 'Nome inválido')
+                validateInput(user.email, 'E-mail inválido')
+                validateInput(user.birthDate, 'Data de nascimento inválida')
+                if(user.type === 'student'){
+                    user = {
+                        name: user.name,
+                        birthDate: user.birthDate,
+                        email: user.email,
+                        gender: user.gender
+                    }
+                    table = 'Student'
+                    email = user.email
+                    validateInput(user.gender, 'Genero inválido')
+                }else{
+                    user = {
+                        name: user.name,
+                        birthDate: user.birthDate,
+                        emailLogin: user.email,
+                        password: user.password,
+                    }
+                    table = 'Teacher'
+                    email = user.emailLogin
+                    validateInput(user.password, 'Senha inválida')
+                }
+                
+                
+                const data = await verifyDataInDataBase(table, email)
+                if(data && data.id) throw 'Já existe um cadastro com este e-mail!'
+                
+                knex(table).insert(user).then(() => res.status(204).send())
+            } catch (error) {
+                return res.status(400).send(error)
+            }
+        })
+
+const verifyDataInDataBase = async (table, email, telphone, cpf) => {
+    let result = null
+    try {
+        if(table === 'Teacher'){
+            result = await knex.select('*').from(table).where({email: email}).orWhere({emailLogin: email}).first()
+
+        }else{
+            result = await knex.select('*').from(table).where({email: email}).first()
+        }
+        console.log(result)
+        return result
+    } catch (error) {
+        return result
+    }
+}
 
 app.route('/mobile/teachers/:id')
     .get(async (req, res) => {
@@ -376,49 +455,67 @@ app.route('/mobile/teachers/:id')
             const teacher = await getTeacher(id)
             const disciplines = await getDisciplinesPerTeacher(id)
             const graduations = await getGraduations(id)
-
+            
             res.json({teacher, disciplines, graduations})
         } catch (error) {
             return res.status(500).send('Ocorreu um erro ao obter os dados. Erro: '+error)
+        }
+    })
+    .put(async (req, res) => {
+        const id = req.params.id
+        const teacher = {...req.body}
+        try {
+            if(!id) throw 'Credencial não fornecida. Erro: ID not found (1)'
+
+            validateInput(teacher.emailLogin, 'E-mail de login inválido')
+            validateInput(teacher.name, 'Nome inválido')
+            validateInput(teacher.birthDate, 'Data de nascimento inválida')
+
+            if(!teacher.birthDate || teacher.birthDate.includes('/')) delete teacher.birthDate
+
+            const teacherExists = await knex.select('*').from('Teacher').where(builder => {
+                builder.where({emailLogin: teacher.emailLogin})
+                .orWhere({email: teacher.email || ''})    
+                .orWhere({telphone: teacher.telphone || ''})    
+            }).andWhere('id','!=',id).first()
+
+            if(teacherExists && teacherExists.id) throw 'Já existe um usuário cadastrado com essas informações'
+
+            if(!teacher.password) delete teacher.password
+
+            knex('Teacher').update(teacher).where({id: id}).then(() => res.status(204).send())
+        } catch (error) {
+            return res.status(400).send(error)
         }
     })
     
 
     const setOrderPrefer = (preference, order) => {
         let option = 'Teacher.costHour'
-        switch(preference){
-            case 1:{
-                option = 'Teacher.costHour'
-                break
-            }
-            case 2:{
-                option = 'Discipline.description'
-                break
-            }
-            case 3:{
-                option = 'Teacher.name'
-                break
-            }
-            default:{
-                option = 'Teacher.costHour'
-            }
 
-            const data = {
-                param: option,
-                sequence: order ? 'desc' : 'asc' 
-            }
-
-            return data
+        if(preference == 1){
+            option = 'Teacher.costHour'
+        }else if(preference == 2){
+            option = 'Discipline.description'
+        }else if(preference == 3){
+            option = 'Teacher.name'
+        }else{
+            option = 'Teacher.costHour'
         }
+        
+        const data = {
+            param: option,
+            sequence: order ? 'desc' : 'asc' 
+        }
+
+        return data
     }
 
     const getTeacher = async id => {
 
         try {
-            const teacher = await knex.select('Teacher.id','Teacher.name','Teacher.email','Teacher.state','Teacher.neighborhood', 'Teacher.especiality', 'Teacher.costHour','Teacher.birthDate','Teacher.telphone').from('Teacher')
-            .whereNotNull('costHour')
-            .where(builder => builder.whereNull('Teacher.deleted').orWhere('Teacher.deleted',false))
-            .andWhere('Teacher.id','=',id)
+            const teacher = await knex.select('Teacher.id','Teacher.name','Teacher.email','Teacher.state','Teacher.neighborhood', 'Teacher.especiality', 'Teacher.costHour','Teacher.birthDate','Teacher.telphone','Teacher.emailLogin', 'Teacher.password').from('Teacher')
+            .where('Teacher.id','=',id)
             .first()
             return teacher
 
@@ -471,6 +568,31 @@ app.route('/mobile/students/:id')
             })
         } catch (error) {
             return res.status(500).send('Ocorreu um erro ao obter os dados. Erro: '+error)
+        }
+    })
+    .put(async (req, res) => {
+        const id = req.params.id
+        const student = {...req.body}
+        try {
+            if(!id) throw 'Credencial não fornecida. Erro: ID not found (1)'
+
+            validateInput(student.email, 'E-mail inválido')
+            validateInput(student.name, 'Nome inválido')
+            validateInput(student.birthDate, 'Data de nascimento inválida')
+            validateInput(student.gender, 'Genero inválido')
+
+            if(!student.birthDate || student.birthDate.includes('/')) delete student.birthDate
+            
+            const studentExists = await knex.select('*').from('Student').where(builder => {
+                builder.where({email: student.email})
+                .orWhere({cpf: student.cpf || ''})    
+            }).andWhere('id','!=',id).first()
+            
+            if(studentExists && studentExists.id) throw 'Já existe um usuário cadastrado com essas informações'
+
+            knex('Student').update(student).where({id: id}).then(() => res.status(204).send())
+        } catch (error) {
+            return res.status(400).send(error)
         }
     })
     
